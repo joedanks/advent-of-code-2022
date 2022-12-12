@@ -14,7 +14,7 @@ const testInput = [
   'CrZsJsPPZsGzwwsLwLmpwMDw'
 ];
 
-describe("Part 1", () => {
+describe.skip("Part 1", () => {
   it("should pass test input", () => {
     expect(partOne(testInput)).toBe(157);
   });
@@ -24,7 +24,7 @@ describe("Part 1", () => {
   });
 });
 
-describe("Part 2", () => {
+describe.skip("Part 2", () => {
   it("should pass test input", () => {
     expect(partTwo(testInput)).toBe(70);
   });

@@ -30,7 +30,7 @@ const testInput = [
   '1-1-2',
 ];
 
-describe("Part 1", () => {
+describe.skip("Part 1", () => {
   it("should pass test input", () => {
     expect(partOne(start, testInput)).toBe('CMZ');
   });
@@ -40,7 +40,7 @@ describe("Part 1", () => {
   });
 });
 
-describe("Part 2", () => {
+describe.skip("Part 2", () => {
   it("should pass test input", () => {
     expect(partTwo(start, testInput)).toBe("MCD");
   });
