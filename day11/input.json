@@ -1,0 +1,82 @@
+[
+  {
+    "items": [74, 64, 74, 63, 53],
+    "operation": ["old", "*", "7"],
+    "test": {
+      "div": 5,
+      "yes": 1,
+      "no": 6
+    },
+    "inspected": 0
+  },
+  {
+    "items": [69, 99, 95, 62],
+    "operation": ["old", "*", "old"],
+    "test": {
+      "div": 17,
+      "yes": 2,
+      "no": 5
+    },
+    "inspected": 0
+  },
+  {
+    "items": [59, 81],
+    "operation": ["old", "+", "8"],
+    "test": {
+      "div": 7,
+      "yes": 4,
+      "no": 3
+    },
+    "inspected": 0
+  },
+  {
+    "items": [50, 67, 63, 57, 63, 83, 97],
+    "operation": ["old", "+", "4"],
+    "test": {
+      "div": 13,
+      "yes": 0,
+      "no": 7
+    },
+    "inspected": 0
+  },
+  {
+    "items": [61, 94, 85, 52, 81, 90, 94, 70],
+    "operation": ["old", "+", "3"],
+    "test": {
+      "div": 19,
+      "yes": 7,
+      "no": 3
+    },
+    "inspected": 0
+  },
+  {
+    "items": [69],
+    "operation": ["old", "+", "5"],
+    "test": {
+      "div": 3,
+      "yes": 4,
+      "no": 2
+    },
+    "inspected": 0
+  },
+  {
+    "items": [54, 55, 58],
+    "operation": ["old", "+", "7"],
+    "test": {
+      "div": 11,
+      "yes": 1,
+      "no": 5
+    },
+    "inspected": 0
+  },
+  {
+    "items": [79, 51, 83, 88, 93, 76],
+    "operation": ["old", "*", "3"],
+    "test": {
+      "div": 2,
+      "yes": 0,
+      "no": 6
+    },
+    "inspected": 0
+  }
+]
