@@ -38,7 +38,7 @@ describe("Part 1", () => {
 });
 
 describe("Part 2", () => {
-  it.only("should pass test input", () => {
+  it("should pass test input", () => {
     expect(partTwo(testInput)).toBe(1);
   });
   
@@ -47,6 +47,6 @@ describe("Part 2", () => {
   });
 
   it("should run real input", () => {
-    expect(partTwo(loadInput())).toBe(883);
+    expect(partTwo(loadInput())).toBe(2607);
   });
 });
