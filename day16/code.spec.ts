@@ -30,11 +30,11 @@ describe.skip("Part 1",() => {
 });
 
 describe("Part 2",() => {
-  it("should pass test input",() => {
+  it.only("should pass test input",() => {
     expect(partTwo(testInput)).toBe(1707);
   });
 
-  it.only("should run real input",() => {
+  it("should run real input",() => {
     expect(partTwo(loadInput())).toStrictEqual(32041);
   });
 });

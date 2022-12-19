@@ -16,7 +16,12 @@ type GraphValve = {
 type Map = Record<string, Valve>;
 
 type State = {
-  currentRoom: string;
+  currentRoom?: string;
+  elephantRoom?: string;
+  goingTo?: string;
+  timeToGetThere?: number;
+  elephantGoingTo?: string;
+  elephantTimeToGetThere?: number;
   openedValves: string[];
   time: number;
   openRate: number;
@@ -130,7 +135,7 @@ function step(state: State, map: Map, time: number): State[] {
       currentRoom: v.name,
       openedValves: state.openedValves.concat([v.name]),
       openRate: state.openRate + v.flowRate,
-      ...iterateTotal(state, map[state.currentRoom].pathDist[v.name] + 1)
+      ...iterateTotal(state, map[state.currentRoom!].pathDist[v.name] + 1)
     }, map, time)
   });
 }
@@ -163,6 +168,12 @@ function step2(state: State, map: Map): State[] {
     .filter(valve => {
       return !state.openedValves.includes(valve.name)
     })
+    .filter(valve => {
+      return valve.name !== state.goingTo!
+    })
+    .filter(valve => {
+      return valve.name !== state.elephantGoingTo!
+    })
 
   if (unopennedValves.length === 0) {
     return [{
@@ -171,36 +182,141 @@ function step2(state: State, map: Map): State[] {
     }]
   }
 
-  return unopennedValves.flatMap(v => {
+  if (state.currentRoom === undefined && state.elephantRoom !== undefined) {
+    //Move me to nextRoom and find a room for elephant
+    return unopennedValves.flatMap(v => {
+      const elephantDist = map[state.elephantRoom!].pathDist[v.name];
+      if (state.timeToGetThere! < elephantDist) {
+        return step2({
+          currentRoom: state.goingTo!,
+          elephantRoom: undefined,
+          goingTo: undefined,
+          timeToGetThere: undefined,
+          elephantGoingTo: v.name,
+          elephantTimeToGetThere: elephantDist - state.timeToGetThere!,
+          openedValves: state.openedValves.concat([state.goingTo!]),
+          openRate: state.openRate + map[state.goingTo!].flowRate,
+          ...iterateTotal(state, state.timeToGetThere! + 1)
+        }, map);
+      }
+      return step2({
+        currentRoom: undefined,
+        elephantRoom: v.name,
+        goingTo: state.goingTo,
+        timeToGetThere: state.timeToGetThere! - elephantDist,
+        elephantGoingTo: undefined,
+        elephantTimeToGetThere: undefined,
+        openedValves: state.openedValves.concat([v.name]),
+        openRate: state.openRate + v.flowRate,
+        ...iterateTotal(state, elephantDist + 1)
+      }, map)
+    })
+  } else if (state.currentRoom !== undefined && state.elephantRoom === undefined) {
+    return unopennedValves.flatMap(v => {
+      const myDist = map[state.currentRoom!].pathDist[v.name];
+      if (myDist < state.elephantTimeToGetThere!) {
+        return step2({
+          currentRoom: v.name,
+          elephantRoom: undefined,
+          goingTo: undefined,
+          timeToGetThere: undefined,
+          elephantGoingTo: state.elephantGoingTo!,
+          elephantTimeToGetThere: state.elephantTimeToGetThere! - myDist,
+          openedValves: state.openedValves.concat([v.name]),
+          openRate: state.openRate + map[v.name].flowRate,
+          ...iterateTotal(state, myDist + 1)
+        }, map);
+      }
+      return step2({
+        currentRoom: undefined,
+        elephantRoom: state.elephantGoingTo!,
+        goingTo: v.name,
+        timeToGetThere: myDist - state.elephantTimeToGetThere!,
+        elephantGoingTo: undefined,
+        elephantTimeToGetThere: undefined,
+        openedValves: state.openedValves.concat([state.elephantGoingTo!]),
+        openRate: state.openRate + map[state.elephantGoingTo!].flowRate,
+        ...iterateTotal(state, state.elephantTimeToGetThere! + 1)
+      }, map)
+    })
+  } else if (state.currentRoom === undefined && state.elephantRoom === undefined) {
+    const myDist = state.timeToGetThere!;
+    if (myDist < state.elephantTimeToGetThere!) {
+      return step2({
+        currentRoom: state.goingTo!,
+        elephantRoom: undefined,
+        goingTo: undefined,
+        timeToGetThere: undefined,
+        elephantGoingTo: state.elephantGoingTo,
+        elephantTimeToGetThere: myDist - state.timeToGetThere!,
+        openedValves: state.openedValves.concat([state.goingTo!]),
+        openRate: state.openRate + map[state.goingTo!].flowRate,
+        ...iterateTotal(state, state.timeToGetThere! + 1)
+      }, map);
+    }
     return step2({
-      currentRoom: v.name,
-      openedValves: state.openedValves.concat([v.name]),
-      openRate: state.openRate + v.flowRate,
-      ...iterateTotal(state, map[state.currentRoom].pathDist[v.name] + 1)
+      currentRoom: undefined,
+      elephantRoom: state.elephantGoingTo!,
+      goingTo: state.goingTo,
+      timeToGetThere: state.timeToGetThere! - myDist,
+      elephantGoingTo: undefined,
+      elephantTimeToGetThere: undefined,
+      openedValves: state.openedValves.concat([state.elephantGoingTo!]),
+      openRate: state.openRate + map[state.elephantGoingTo!].flowRate,
+      ...iterateTotal(state, myDist + 1)
     }, map)
-  });
+  } else if (state.currentRoom !== undefined && state.elephantRoom !== undefined) {
+    return splitAvailableByWorkers(unopennedValves).flatMap(([nextA, nextB]) => {
+      const myNext = map[state.currentRoom!].pathDist[nextA.name] < map[state.currentRoom!].pathDist[nextB.name] ? nextA : nextB;
+      const elephantNext = myNext === nextB ? nextA : nextB;
+      const myDist = map[state.currentRoom!].pathDist[myNext.name];
+      const elephantDist = map[state.elephantRoom!].pathDist[elephantNext.name];
+      if( < elephantDist) {
+        return step2({
+          currentRoom: myNext.name,
+          elephantRoom: undefined,
+          goingTo: undefined,
+          timeToGetThere: undefined,
+          elephantGoingTo: elephantNext.name,
+          elephantTimeToGetThere: elephantDist- myDist,
+          openedValves: state.openedValves.concat([myNext.name]),
+          openRate: state.openRate + map[myNext.name].flowRate,
+          ...iterateTotal(state, myDist + 1)
+        }, map);
+      }
+      return step2({
+        currentRoom: undefined,
+        elephantRoom: elephantNext.name,
+        goingTo: myNext.name,
+        timeToGetThere: elephantDist - myDist,
+        elephantGoingTo: undefined,
+        elephantTimeToGetThere: undefined,
+        openedValves: state.openedValves.concat([elephantNext.name]),
+        openRate: state.openRate + map[elephantNext.name].flowRate,
+        ...iterateTotal(state, elephantDist + 1)
+      }, map)
+    })
+  }
+  console.log(JSON.stringify(state));
+  throw new Error('Can I get here?')
 }
 
 export function partTwo(input: string[]) {
   const map = parseMap(input);
   const initial: State = {
     currentRoom: 'AA',
+    elephantRoom: 'AA',
+    goingTo: undefined,
+    timeToGetThere: undefined,
+    elephantGoingTo: undefined,
+    elephantTimeToGetThere: undefined,
     openedValves: [],
     time: 0,
     openRate: 0,
     totalPressure: 0
   }
 
-  const myMax = _.maxBy(step(initial, map, 26), s => s.totalPressure)!;
+  const outcomes = step2(initial, map);
 
-  const elephantInitial: State = {
-    currentRoom: 'AA',
-    openedValves: myMax.openedValves,
-    time: 0,
-    openRate: 0,
-    totalPressure: 0
-  }
-  const elephantMax = _.maxBy(step(elephantInitial, map, 26), s => s.totalPressure)!;
-  
-  return myMax.totalPressure + elephantMax.totalPressure
+  return _.max(outcomes.map(s => s.totalPressure))
 }
