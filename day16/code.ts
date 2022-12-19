@@ -104,6 +104,7 @@ function splitAvailableByWorkers(available: Valve[]) {
   for (let i = 0; i < available.length - 1; i++) {
     for (let j = i + 1; j < available.length; j++) {
       results.push([available[i], available[j]])
+      results.push([available[j], available[i]])
     }
   }
   return results;
@@ -175,15 +176,40 @@ function step2(state: State, map: Map): State[] {
       return valve.name !== state.elephantGoingTo!
     })
 
+    
   if (unopennedValves.length === 0) {
+    if (state.elephantGoingTo) {
+      return step2({
+        currentRoom: state.currentRoom,
+        elephantRoom: state.elephantGoingTo!,
+        goingTo: undefined,
+        timeToGetThere: undefined,
+        elephantGoingTo: undefined,
+        elephantTimeToGetThere: undefined,
+        openedValves: state.openedValves.concat([state.elephantGoingTo!]),
+        openRate: state.openRate + map[state.elephantGoingTo].flowRate,
+        ...iterateTotal(state, state.elephantTimeToGetThere! + 1)
+      }, map);
+    } else if (state.goingTo) {
+      return step2({
+        currentRoom: state.goingTo!,
+        elephantRoom: state.elephantRoom,
+        goingTo: undefined,
+        timeToGetThere: undefined,
+        elephantGoingTo: undefined,
+        elephantTimeToGetThere: undefined,
+        openedValves: state.openedValves.concat([state.goingTo!]),
+        openRate: state.openRate + map[state.goingTo].flowRate,
+        ...iterateTotal(state, state.timeToGetThere! + 1)
+      }, map);
+    }
     return [{
       ...state,
       ...iterateTotal(state, 26 - state.time)
     }]
   }
-
+  
   if (state.currentRoom === undefined && state.elephantRoom !== undefined) {
-    //Move me to nextRoom and find a room for elephant
     return unopennedValves.flatMap(v => {
       const elephantDist = map[state.elephantRoom!].pathDist[v.name];
       if (state.timeToGetThere! < elephantDist) {
@@ -267,18 +293,18 @@ function step2(state: State, map: Map): State[] {
     }, map)
   } else if (state.currentRoom !== undefined && state.elephantRoom !== undefined) {
     return splitAvailableByWorkers(unopennedValves).flatMap(([nextA, nextB]) => {
-      const myNext = map[state.currentRoom!].pathDist[nextA.name] < map[state.currentRoom!].pathDist[nextB.name] ? nextA : nextB;
-      const elephantNext = myNext === nextB ? nextA : nextB;
+      const myNext = nextA;
+      const elephantNext = nextB;
       const myDist = map[state.currentRoom!].pathDist[myNext.name];
       const elephantDist = map[state.elephantRoom!].pathDist[elephantNext.name];
-      if( < elephantDist) {
+      if (myDist < elephantDist) {
         return step2({
           currentRoom: myNext.name,
           elephantRoom: undefined,
           goingTo: undefined,
           timeToGetThere: undefined,
           elephantGoingTo: elephantNext.name,
-          elephantTimeToGetThere: elephantDist- myDist,
+          elephantTimeToGetThere: elephantDist - myDist,
           openedValves: state.openedValves.concat([myNext.name]),
           openRate: state.openRate + map[myNext.name].flowRate,
           ...iterateTotal(state, myDist + 1)
