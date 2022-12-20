@@ -3,7 +3,7 @@ import _ from "lodash";
 import { partOne, partTwo } from "./code";
 
 const loadInput = () => {
-  return JSON.parse(fs.readFileSync("day19/input.json", "utf-8"));
+  return JSON.parse(fs.readFileSync("day17/input.json", "utf-8"));
 };
 
 const testInput: string = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>';
@@ -25,6 +25,6 @@ describe("Part 2", () => {
   });
 
   it.skip("should run real input", () => {
-    expect(partTwo(realInput)).toStrictEqual(32041);
+    expect(partTwo(realInput)).toStrictEqual(1565517241382);
   });
 });

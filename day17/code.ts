@@ -229,6 +229,21 @@ export function partTwo(input: string) {
   const entry = Object.entries(cache)
     .find(([key, value]) => value.length >= 2)!;
 
+  const entriesSameDiff = Object.entries(cache)
+    .filter(([key, value]) => value.length >= 2)
+    .map(([key, value]): [string, number[]] => {
+      const diffs = [];
+      for (let j = 0; j < value.length - 1; j++) {
+        const a = value[j];
+        const b = value[j + 1];
+        diffs.push(b - a);
+      }
+      return [key, diffs];
+    })
+    .filter(([key, diffs]) => {
+      return diffs.every((d) => d === diffs[0]);
+    });
+
   const diff = entry[1][1] - entry[1][0]; 
 
   const base = Math.floor(1000000000000 / diff) * heightCache[diff]
