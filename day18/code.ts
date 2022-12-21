@@ -3,6 +3,7 @@ import _ from "lodash";
 type Entry = {
   position: string;
   neighbors: number;
+  filled: boolean;
 };
 
 type Grid = Record<string, Entry>;
@@ -39,6 +40,7 @@ function buildGrid(input: string[]) {
     grid[i] = {
       position: i,
       neighbors: 6 - neighbors.length,
+      filled: true,
     };
   });
   return grid;
@@ -64,45 +66,61 @@ type Extent = {
 function maxExtents(input: string[]): Extent {
   const [xs, ys, zs] = _.unzip(input.map(readPositionString));
   return {
-    minX: _.min(xs)!,
-    maxX: _.max(xs)!,
-    minY: _.min(ys)!,
-    maxY: _.max(ys)!,
-    minZ: _.min(zs)!,
-    maxZ: _.max(zs)!,
+    minX: _.min(xs)! - 1,
+    maxX: _.max(xs)! + 1,
+    minY: _.min(ys)! - 1,
+    maxY: _.max(ys)! + 1,
+    minZ: _.min(zs)! - 1,
+    maxZ: _.max(zs)! + 1,
   };
+}
+
+function inExtent(position: string, extent: Extent) {
+  const [x, y, z] = readPositionString(position);
+  return (
+    extent.minX <= x &&
+    x <= extent.maxX &&
+    extent.minY <= y &&
+    y <= extent.maxY &&
+    extent.minZ <= z &&
+    z <= extent.maxZ
+  );
 }
 
 export function partTwo(input: string[]): number {
   const grid = buildGrid(input);
   const extent = maxExtents(input);
-  let airPockets = 0;
+  let internalSides = 0;
 
-  for (let z = extent.minZ; z <= extent.maxZ; z++) {
-    for (let y = extent.minY; y <= extent.maxY; y++) {
-      for (let x = extent.minX; x <= extent.maxX; x++) {
-        const position = getPositionString(x, y, z);
-        if (!grid[position]) {
-          const neighborPositions = getNeighborPositions(position);
-          const neighbors = neighborPositions.map((n) => grid[n]);
+  let stack: string[] = [
+    getPositionString(extent.minX, extent.minY, extent.minZ),
+  ];
 
-          const singleHole = neighbors.every((n) => n);
+  while (stack.length !== 0) {
+    const position = stack.pop()!;
 
-          if(singleHole) {
-            airPockets++;
-            continue;
-          }
-          if(neighbors.filter(n => n).length === 5) {
-            
-          }
-        }
-      }
+    const maybe = grid[position];
+    if (!maybe) {
+      const solidNeighbors = getNeighborPositions(position)
+        .map((p) => grid[p])
+        .filter((n) => !!n)
+        .filter((n) => n.filled);
+      grid[position] = {
+        position,
+        neighbors: solidNeighbors.length,
+        filled: false,
+      };
+      const emptyNeighbors = getNeighborPositions(position)
+        .filter((p) => !grid[p])
+        .filter((p) => inExtent(p, extent));
+      stack = [...new Set(emptyNeighbors.concat(stack))];
     }
   }
 
   const totalSides = Object.values(grid)
+    .filter((e) => e.filled === false)
     .map((e) => e.neighbors)
     .reduce((a, b) => a + b);
 
-  return totalSides - (airPockets * 6);
+  return totalSides;
 }
