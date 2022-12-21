@@ -24,6 +24,7 @@ function buildNodes(input: number[], decryptionKey?: number) {
     }
   }
   nodes[0].left = _.last(nodes);
+  _.last(nodes)!.right = nodes[0]
 
   return nodes;
 }
@@ -38,10 +39,11 @@ function cutNode(node: Node) {
   return node;
 }
 
-function insertNode(node: Node) {
-  if (node.value < 0) {
+function insertNode(node: Node, max: number) {
+  const value = node.value % (max - 1)
+  if (value < 0) {
     let next: Node = node;
-    for (let i = 0; i > node.value; i--) {
+    for (let i = 0; i > value; i--) {
       next = next.left!;
     }
     const before = next.left!;
@@ -49,9 +51,9 @@ function insertNode(node: Node) {
     node.left = before;
     next.left = node;
     before.right = node;
-  } else if (node.value > 0) {
+  } else if (value > 0) {
     let next: Node = node;
-    for (let i = 0; i < node.value; i++) {
+    for (let i = 0; i < value; i++) {
       next = next.right!;
     }
     const after = next.right!;
@@ -91,9 +93,9 @@ function print(nodes: Node[], start: Node) {
 function mix(nodes: Node[]) {
   for (let i = 0; i < nodes.length; i++) {
     const node = getNode(i, nodes);
-    if (node.value !== 0) {
+    if (node.value !== 0 && loopIndex(node.value, nodes.length - 1)) {
       cutNode(node);
-      insertNode(node);
+      insertNode(node, nodes.length);
     }
   }
 }

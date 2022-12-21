@@ -27,6 +27,6 @@ describe.skip("Part 2", () => {
   });
 
   it("should run real input", () => {
-    expect(partTwo(loadInput())).toStrictEqual(2510);
+    expect(partTwo(loadInput())).toStrictEqual(8119137886612);
   });
 });
