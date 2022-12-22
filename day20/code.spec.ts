@@ -10,7 +10,7 @@ const testInput: number[] = [1, 2, -3, 3, -2, 0, 4];
 
 const extraTest: number[] = [0, 2, 3, -4];
 
-describe("Part 1", () => {
+describe.skip("Part 1", () => {
   it("should pass test input", () => {
     expect(partOne(testInput)).toBe(3);
     // expect(partOne(extraTest)).toBe(3);
