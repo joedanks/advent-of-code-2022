@@ -5,7 +5,7 @@ const directions = [
   1, //Down
   2, //Left
   3, //Up
-]
+];
 
 type Location = {
   position: string;
@@ -29,12 +29,14 @@ function changeDirection(current: number, change: string): number {
       return directions[3];
     }
     return directions[next];
+  } else if (change === "R") {
+    const next = current + 1;
+    if (next === 4) {
+      return directions[0];
+    }
+    return directions[next];
   }
-  const next = current + 1;
-  if (next === 4) {
-    return directions[0];
-  }
-  return directions[next];
+  return current;
 }
 
 function parseGrid(input: string[]): [Grid, number] {
@@ -58,13 +60,16 @@ function parseGrid(input: string[]): [Grid, number] {
 }
 
 function parseInstructions(raw: string) {
+  const instructions: [number, string][] = [];
   const regex = /(\d+)([RL])/g;
   let result = regex.exec(raw);
-  const instructions: [number, string][] = [];
+  let lastIndex: number;
   while (result) {
+    lastIndex = result.index + result[0].length;
     instructions.push([parseInt(result[1], 10), result[2]]);
     result = regex.exec(raw);
   }
+  instructions.push([parseInt(raw.substring(lastIndex!), 10), ''])
   return instructions;
 }
 
@@ -148,14 +153,14 @@ function getGridPositionBiasDown(
 function move(
   currentPosition: string,
   direction: number,
-  instruction: [number, string],
+  distance: number,
   grid: Grid,
   maxWidth: number,
   maxHeight: number
-): [string, number] {
+): string {
   const [startX, startY] = readPositionString(currentPosition);
   let [currentX, currentY] = [startX, startY];
-  for (let i = 0; i < instruction[0]; i++) {
+  for (let i = 0; i < distance; i++) {
     let next: Location;
     switch (direction) {
       case 0: //Right
@@ -167,25 +172,19 @@ function move(
         if (next.value === ".") {
           [currentX, currentY] = readPositionString(next.position);
         } else if (next.value === "#") {
-          return [
-            getPositionString(currentX, currentY),
-            changeDirection(direction, instruction[1]),
-          ];
+          return getPositionString(currentX, currentY);
         }
         break;
       case 1: //Down
         next = getGridPositionBiasDown(
           getPositionString(currentX, currentY + 1),
           grid,
-          maxWidth
+          maxHeight
         );
         if (next.value === ".") {
           [currentX, currentY] = readPositionString(next.position);
         } else if (next.value === "#") {
-          return [
-            getPositionString(currentX, currentY),
-            changeDirection(direction, instruction[1]),
-          ];
+          return getPositionString(currentX, currentY);
         }
         break;
       case 2: // Left
@@ -197,33 +196,24 @@ function move(
         if (next.value === ".") {
           [currentX, currentY] = readPositionString(next.position);
         } else if (next.value === "#") {
-          return [
-            getPositionString(currentX, currentY),
-            changeDirection(direction, instruction[1]),
-          ];
+          return getPositionString(currentX, currentY);
         }
         break;
       case 3: //Up
         next = getGridPositionBiasUp(
           getPositionString(currentX, currentY - 1),
           grid,
-          maxWidth
+          maxHeight
         );
         if (next.value === ".") {
           [currentX, currentY] = readPositionString(next.position);
         } else if (next.value === "#") {
-          return [
-            getPositionString(currentX, currentY),
-            changeDirection(direction, instruction[1]),
-          ];
+          return getPositionString(currentX, currentY);
         }
         break;
     }
   }
-  return [
-    getPositionString(currentX, currentY),
-    changeDirection(direction, instruction[1]),
-  ];
+  return getPositionString(currentX, currentY);
 }
 
 export function partOne(input: string[], rawInstructions: string): number {
@@ -236,8 +226,17 @@ export function partOne(input: string[], rawInstructions: string): number {
   ).position;
   let direction = 0;
 
-  instructions.forEach(([distance, turn]) => {
-    [current, direction] = move(current, direction, [distance, turn], grid, maxWidth, input.length);
+  instructions.forEach(([distance, directionChange]) => {
+    current = move(
+      current,
+      direction,
+      distance,
+      grid,
+      maxWidth,
+      input.length
+    );
+
+    direction = changeDirection(direction, directionChange);
   });
 
   const [x, y] = readPositionString(current);
